@@ -444,10 +444,202 @@ class AdminApp {
         }
     }
 
+    // Updated room management functions
     manageRoomUsers(roomId) {
-        // This could open a detailed room management modal
-        // For now, show a notification
-        this.showInfo('Room user management feature coming soon');
+        // Show room user management modal
+        this.showRoomUserManagementModal(roomId);
+    }
+
+    showRoomUserManagementModal(roomId) {
+        const room = this.rooms.find(r => r.id === roomId);
+        if (!room) return;
+
+        // Create modal HTML
+        const modalHtml = `
+            <div id="room-user-management-modal" class="modal active">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3>Manage Users - ${room.name}</h3>
+                    
+                    <div class="room-management-container">
+                        <div class="current-members">
+                            <h4>Current Members</h4>
+                            <div id="current-room-members" class="members-list">
+                                Loading...
+                            </div>
+                        </div>
+                        
+                        <div class="add-member-section">
+                            <h4>Add Member to Room</h4>
+                            <div class="form-group">
+                                <select id="select-user-for-room">
+                                    <option value="">Loading users...</option>
+                                </select>
+                                <button id="add-user-to-room-btn" class="btn btn-primary">Add Member</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if present
+        const existingModal = document.getElementById('room-user-management-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Load data and set up event listeners
+        this.loadRoomMembersForModal(roomId);
+        this.loadMemberUsersForModal();
+        this.setupRoomUserModalEvents(roomId);
+    }
+
+    async loadRoomMembersForModal(roomId) {
+        try {
+            const members = await window.auth.apiCall(`/api/rooms/${roomId}/members`);
+            this.renderCurrentRoomMembers(members);
+        } catch (error) {
+            console.error('Failed to load room members:', error);
+            document.getElementById('current-room-members').innerHTML = 
+                '<p class="error">Failed to load members</p>';
+        }
+    }
+
+    async loadMemberUsersForModal() {
+        try {
+            const users = await window.auth.apiCall('/api/users/members');
+            this.renderUserSelectorForModal(users);
+        } catch (error) {
+            console.error('Failed to load users:', error);
+            document.getElementById('select-user-for-room').innerHTML = 
+                '<option value="">Error loading users</option>';
+        }
+    }
+
+    renderCurrentRoomMembers(members) {
+        const container = document.getElementById('current-room-members');
+        if (!container) return;
+
+        if (members.length === 0) {
+            container.innerHTML = '<p>No members assigned to this room</p>';
+            return;
+        }
+
+        container.innerHTML = members.map(member => `
+            <div class="member-item">
+                <div class="member-info">
+                    <div class="member-name">${this.escapeHtml(member.username)}</div>
+                    <div class="member-email">${this.escapeHtml(member.email)}</div>
+                </div>
+                <div class="member-actions">
+                    <button class="btn btn-danger" onclick="adminApp.removeMemberFromRoom(${member.user_id}, this)">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    renderUserSelectorForModal(users) {
+        const selector = document.getElementById('select-user-for-room');
+        if (!selector) return;
+
+        selector.innerHTML = '<option value="">Choose a user...</option>' +
+            users.map(user => `
+                <option value="${user.id}">${this.escapeHtml(user.username)} (${this.escapeHtml(user.email)})</option>
+            `).join('');
+    }
+
+    setupRoomUserModalEvents(roomId) {
+        // Close modal event
+        const closeBtn = document.querySelector('#room-user-management-modal .close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                document.getElementById('room-user-management-modal').remove();
+            });
+        }
+
+        // Add user button event
+        const addBtn = document.getElementById('add-user-to-room-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                this.addUserToRoomFromModal(roomId);
+            });
+        }
+
+        // Click outside to close
+        const modal = document.getElementById('room-user-management-modal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+    }
+
+    async addUserToRoomFromModal(roomId) {
+        const userSelector = document.getElementById('select-user-for-room');
+        const userId = userSelector?.value;
+
+        if (!userId) {
+            this.showError('Please select a user');
+            return;
+        }
+
+        try {
+            await window.auth.apiCall(`/api/rooms/${roomId}/assign-user`, {
+                method: 'POST',
+                body: JSON.stringify({ userId: parseInt(userId) })
+            });
+
+            this.showSuccess('Member added to room successfully');
+            
+            // Refresh the members list
+            await this.loadRoomMembersForModal(roomId);
+            
+            // Reset selector
+            userSelector.value = '';
+        } catch (error) {
+            console.error('Failed to add member to room:', error);
+            this.showError('Failed to add member to room');
+        }
+    }
+
+    async removeMemberFromRoom(userId, buttonElement) {
+        if (!confirm('Are you sure you want to remove this member from the room?')) {
+            return;
+        }
+
+        // Get roomId from the modal
+        const modal = document.getElementById('room-user-management-modal');
+        const titleElement = modal?.querySelector('h3');
+        if (!titleElement) return;
+
+        const roomName = titleElement.textContent.replace('Manage Users - ', '');
+        const room = this.rooms.find(r => r.name === roomName);
+        if (!room) return;
+
+        try {
+            await window.auth.apiCall(`/api/rooms/${room.id}/assign-user/${userId}`, {
+                method: 'DELETE'
+            });
+
+            this.showSuccess('Member removed from room successfully');
+            
+            // Remove the member item from UI
+            const memberItem = buttonElement.closest('.member-item');
+            if (memberItem) {
+                memberItem.remove();
+            }
+        } catch (error) {
+            console.error('Failed to remove member from room:', error);
+            this.showError('Failed to remove member from room');
+        }
     }
 
     async downloadRecording(recordingId) {
