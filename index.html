@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Expense Direct - Video Conference</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-container">
+                <div class="logo-container">
+                    <img src="assets/logo.png" alt="Final Expense Direct" class="logo">
+                    <h1>Video Conference Platform</h1>
+                </div>
+                
+                <form id="login-form" class="login-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Login</button>
+                    
+                    <div id="login-error" class="error-message"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Member Dashboard -->
+        <div id="member-screen" class="screen">
+            <header class="app-header">
+                <div class="logo-container">
+                    <img src="assets/logo.png" alt="Final Expense Direct" class="logo-small">
+                </div>
+                <div class="user-info">
+                    <span id="member-username"></span>
+                    <button id="member-logout" class="btn btn-secondary">Logout</button>
+                </div>
+            </header>
+
+            <div class="main-layout">
+                <div class="content-area">
+                    <div id="member-video-container" class="video-container">
+                        <div id="member-local-video-container" class="local-video-container">
+                            <video id="member-local-video" autoplay muted playsinline></video>
+                            <div class="video-controls">
+                                <button id="member-toggle-mic" class="control-btn">
+                                    <span class="mic-icon">🎤</span>
+                                </button>
+                                <button id="member-toggle-video" class="control-btn">
+                                    <span class="video-icon">📹</span>
+                                </button>
+                                <button id="member-share-screen" class="control-btn">
+                                    <span class="share-icon">📺</span>
+                                </button>
+                                <button id="member-toggle-fullscreen" class="control-btn">
+                                    <span class="fullscreen-icon">⛶</span>
+                                </button>
+                                <button id="member-leave-room" class="control-btn leave-btn">
+                                    Leave Room
+                                </button>
+                            </div>
+                        </div>
+                        <div id="member-remote-videos" class="remote-videos-grid"></div>
+                        <div id="member-view-controls" class="view-controls">
+                            <button id="member-gallery-view" class="view-btn active">Gallery</button>
+                            <button id="member-speaker-view" class="view-btn">Speaker</button>
+                        </div>
+                    </div>
+                    
+                    <div class="background-selector">
+                        <label for="member-background-color">Background Color:</label>
+                        <select id="member-background-color">
+                            <option value="none">No Background</option>
+                            <option value="#F8F7FF">Light Gray</option>
+                            <option value="#00A6FB">Blue</option>
+                            <option value="#006494">Dark Blue</option>
+                            <option value="#003554">Navy</option>
+                            <option value="#051923">Black</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sidebar">
+                    <div class="chat-section">
+                        <h3>Chat</h3>
+                        <div id="member-chat-messages" class="chat-messages"></div>
+                        <div class="chat-input-container">
+                            <input type="text" id="member-chat-input" placeholder="Type a message...">
+                            <button id="member-send-chat" class="btn btn-primary">Send</button>
+                        </div>
+                    </div>
+
+                    <div class="rooms-section">
+                        <h3>Available Rooms</h3>
+                        <div id="member-rooms-list" class="rooms-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recording-notice">
+                ⚠️ This meeting is being recorded for quality and training purposes.
+            </div>
+        </div>
+
+        <!-- Host Dashboard -->
+        <div id="host-screen" class="screen">
+            <header class="app-header">
+                <div class="logo-container">
+                    <img src="assets/logo.png" alt="Final Expense Direct" class="logo-small">
+                </div>
+                <div class="nav-tabs">
+                    <button id="host-main-tab" class="tab-btn active">Main</button>
+                    <button id="host-manage-tab" class="tab-btn">Manage Rooms</button>
+                </div>
+                <div class="user-info">
+                    <span id="host-username"></span>
+                    <button id="host-logout" class="btn btn-secondary">Logout</button>
+                </div>
+            </header>
+
+            <!-- Host Main Tab -->
+            <div id="host-main" class="tab-content active">
+                <div class="main-layout">
+                    <div class="content-area">
+                        <div id="host-video-container" class="video-container">
+                            <div id="host-local-video-container" class="local-video-container">
+                                <video id="host-local-video" autoplay muted playsinline></video>
+                                <div class="video-controls">
+                                    <button id="host-toggle-mic" class="control-btn">
+                                        <span class="mic-icon">🎤</span>
+                                    </button>
+                                    <button id="host-toggle-video" class="control-btn">
+                                        <span class="video-icon">📹</span>
+                                    </button>
+                                    <button id="host-share-screen" class="control-btn">
+                                        <span class="share-icon">📺</span>
+                                    </button>
+                                    <button id="host-toggle-fullscreen" class="control-btn">
+                                        <span class="fullscreen-icon">⛶</span>
+                                    </button>
+                                    <button id="host-start-recording" class="control-btn record-btn">
+                                        Start Recording
+                                    </button>
+                                    <button id="host-leave-room" class="control-btn leave-btn">
+                                        Leave Room
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="host-remote-videos" class="remote-videos-grid"></div>
+                            <div id="host-view-controls" class="view-controls">
+                                <button id="host-gallery-view" class="view-btn active">Gallery</button>
+                                <button id="host-speaker-view" class="view-btn">Speaker</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar">
+                        <div class="chat-section">
+                            <h3>Chat</h3>
+                            <div id="host-chat-messages" class="chat-messages"></div>
+                            <div class="chat-input-container">
+                                <input type="text" id="host-chat-input" placeholder="Type a message...">
+                                <button id="host-send-chat" class="btn btn-primary">Send</button>
+                            </div>
+                        </div>
+
+                        <div class="rooms-section">
+                            <h3>My Rooms</h3>
+                            <div id="host-rooms-list" class="rooms-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Host Manage Tab -->
+            <div id="host-manage" class="tab-content">
+                <div class="manage-container">
+                    <h2>Room Management</h2>
+                    
+                    <div class="room-management">
+                        <div class="room-selector">
+                            <label for="host-select-room">Select Room:</label>
+                            <select id="host-select-room">
+                                <option value="">Choose a room...</option>
+                            </select>
+                        </div>
+
+                        <div id="host-room-members" class="room-members">
+                            <h3>Room Members</h3>
+                            <div id="host-members-list" class="members-list"></div>
+                        </div>
+
+                        <div class="add-member-section">
+                            <h3>Add Member to Room</h3>
+                            <div class="form-group">
+                                <label for="host-select-user">Select User:</label>
+                                <select id="host-select-user">
+                                    <option value="">Choose a user...</option>
+                                </select>
+                                <button id="host-add-member" class="btn btn-primary">Add Member</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recording-notice">
+                ⚠️ This meeting is being recorded for quality and training purposes.
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="admin-screen" class="screen">
+            <header class="app-header">
+                <div class="logo-container">
+                    <img src="assets/logo.png" alt="Final Expense Direct" class="logo-small">
+                </div>
+                <div class="nav-tabs">
+                    <button id="admin-dashboard-tab" class="tab-btn active">Dashboard</button>
+                    <button id="admin-users-tab" class="tab-btn">Users</button>
+                    <button id="admin-rooms-tab" class="tab-btn">Rooms</button>
+                    <button id="admin-recordings-tab" class="tab-btn">Recordings</button>
+                </div>
+                <div class="user-info">
+                    <span id="admin-username"></span>
+                    <button id="admin-logout" class="btn btn-secondary">Logout</button>
+                </div>
+            </header>
+
+            <!-- Admin Dashboard Tab -->
+            <div id="admin-dashboard" class="tab-content active">
+                <div class="dashboard-container">
+                    <h2>System Dashboard</h2>
+                    
+                    <div class="dashboard-stats">
+                        <div class="stat-card">
+                            <h3>Active Rooms</h3>
+                            <div id="active-rooms-count" class="stat-number">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Online Users</h3>
+                            <div id="online-users-count" class="stat-number">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Users</h3>
+                            <div id="total-users-count" class="stat-number">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Recordings</h3>
+                            <div id="total-recordings-count" class="stat-number">0</div>
+                        </div>
+                    </div>
+
+                    <div class="active-sessions">
+                        <h3>Active Sessions</h3>
+                        <div id="active-sessions-list" class="sessions-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Users Tab -->
+            <div id="admin-users" class="tab-content">
+                <div class="users-container">
+                    <div class="section-header">
+                        <h2>User Management</h2>
+                        <button id="admin-add-user-btn" class="btn btn-primary">Add User</button>
+                    </div>
+
+                    <div id="admin-users-list" class="users-list"></div>
+
+                    <!-- Add User Modal -->
+                    <div id="add-user-modal" class="modal">
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+                            <h3>Add New User</h3>
+                            <form id="add-user-form">
+                                <div class="form-group">
+                                    <label for="new-username">Username:</label>
+                                    <input type="text" id="new-username" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-email">Email:</label>
+                                    <input type="email" id="new-email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-password">Password:</label>
+                                    <input type="password" id="new-password" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-role">Role:</label>
+                                    <select id="new-role" required>
+                                        <option value="Member">Member</option>
+                                        <option value="Host">Host</option>
+                                        <option value="Admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Add User</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Rooms Tab -->
+            <div id="admin-rooms" class="tab-content">
+                <div class="rooms-container">
+                    <div class="section-header">
+                        <h2>Room Management</h2>
+                        <button id="admin-add-room-btn" class="btn btn-primary">Add Room</button>
+                    </div>
+
+                    <div id="admin-rooms-list" class="rooms-list"></div>
+
+                    <!-- Add Room Modal -->
+                    <div id="add-room-modal" class="modal">
+                        <div class="modal-content">
+                            <span class="close">&times;</span>
+                            <h3>Add New Room</h3>
+                            <form id="add-room-form">
+                                <div class="form-group">
+                                    <label for="new-room-name">Room Name:</label>
+                                    <input type="text" id="new-room-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-room-description">Description:</label>
+                                    <textarea id="new-room-description"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="new-room-max-participants">Max Participants:</label>
+                                    <input type="number" id="new-room-max-participants" value="60" min="1" max="100">
+                                </div>
+                                <div class="form-actions">
+                                    <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Add Room</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Recordings Tab -->
+            <div id="admin-recordings" class="tab-content">
+                <div class="recordings-container">
+                    <h2>Recordings Management</h2>
+                    <div id="admin-recordings-list" class="recordings-list"></div>
+                </div>
+            </div>
+
+            <div class="recording-notice">
+                ⚠️ This meeting is being recorded for quality and training purposes.
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/member.js"></script>
+    <script src="js/host.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
