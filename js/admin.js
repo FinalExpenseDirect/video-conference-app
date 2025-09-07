@@ -13,26 +13,87 @@ class AdminApp {
 
     async init() {
         if (!window.auth || !window.auth.hasRole('Admin')) {
+            console.log('Not admin user, skipping admin app init');
             return;
         }
 
-        await this.loadInitialData();
-        this.setupEventListeners();
-        this.startStatsUpdates();
+        console.log('Initializing admin app...');
+        
+        try {
+            this.setupEventListeners();
+            
+            // Load data with a slight delay to ensure auth is ready
+            setTimeout(async () => {
+                await this.loadInitialData();
+                this.startStatsUpdates();
+            }, 500);
+            
+        } catch (error) {
+            console.error('Failed to initialize admin app:', error);
+            this.showError('Failed to initialize admin interface');
+        }
     }
 
     async loadInitialData() {
         try {
-            await Promise.all([
-                this.loadUsers(),
-                this.loadRooms(),
-                this.loadRecordings(),
-                this.updateDashboardStats()
-            ]);
+            // Show loading indicators
+            this.showLoadingStates();
+            
+            // Load data sequentially to avoid race conditions
+            await this.loadUsers();
+            await this.loadRooms();
+            await this.loadRecordings();
+            await this.updateDashboardStats();
+            
+            // Hide loading indicators
+            this.hideLoadingStates();
         } catch (error) {
             console.error('Failed to load initial data:', error);
             this.showError('Failed to load initial data');
+            this.hideLoadingStates();
         }
+    }
+
+    showLoadingStates() {
+        // Show loading for users
+        const usersList = document.getElementById('admin-users-list');
+        if (usersList) {
+            usersList.innerHTML = '<div class="loading-spinner">Loading users...</div>';
+        }
+        
+        // Show loading for rooms
+        const roomsList = document.getElementById('admin-rooms-list');
+        if (roomsList) {
+            roomsList.innerHTML = '<div class="loading-spinner">Loading rooms...</div>';
+        }
+        
+        // Show loading for recordings
+        const recordingsList = document.getElementById('admin-recordings-list');
+        if (recordingsList) {
+            recordingsList.innerHTML = '<div class="loading-spinner">Loading recordings...</div>';
+        }
+        
+        // Show loading for dashboard stats
+        const statsElements = [
+            'total-users-count',
+            'total-recordings-count', 
+            'active-rooms-count',
+            'online-users-count'
+        ];
+        
+        statsElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = '...';
+            }
+        });
+    }
+
+    hideLoadingStates() {
+        // Remove any loading spinners
+        document.querySelectorAll('.loading-spinner').forEach(spinner => {
+            spinner.remove();
+        });
     }
 
     setupEventListeners() {
@@ -47,6 +108,14 @@ class AdminApp {
         
         // Modal handling
         this.setupModalHandling();
+        
+        // Add refresh button handler
+        const refreshBtn = document.getElementById('admin-refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                this.manualRefresh();
+            });
+        }
     }
 
     setupUserManagement() {
@@ -109,31 +178,103 @@ class AdminApp {
 
     async loadUsers() {
         try {
-            this.users = await window.auth.apiCall('/api/users');
-            this.renderUsers();
+            console.log('Loading users...');
+            const users = await window.auth.apiCall('/api/users');
+            console.log('Users loaded:', users.length);
+            
+            // Only update if we got valid data
+            if (Array.isArray(users)) {
+                this.users = users;
+                this.renderUsers();
+            } else {
+                throw new Error('Invalid users data received');
+            }
         } catch (error) {
             console.error('Failed to load users:', error);
             this.showError('Failed to load users');
+            
+            // Don't clear existing data on error
+            if (this.users.length === 0) {
+                const usersList = document.getElementById('admin-users-list');
+                if (usersList) {
+                    usersList.innerHTML = '<p class="error-message">Failed to load users. Please try again.</p>';
+                }
+            }
         }
     }
 
     async loadRooms() {
         try {
-            this.rooms = await window.auth.apiCall('/api/rooms');
-            this.renderRooms();
+            console.log('Loading rooms...');
+            const rooms = await window.auth.apiCall('/api/rooms');
+            console.log('Rooms loaded:', rooms.length);
+            
+            // Only update if we got valid data
+            if (Array.isArray(rooms)) {
+                this.rooms = rooms;
+                this.renderRooms();
+            } else {
+                throw new Error('Invalid rooms data received');
+            }
         } catch (error) {
             console.error('Failed to load rooms:', error);
             this.showError('Failed to load rooms');
+            
+            // Don't clear existing data on error
+            if (this.rooms.length === 0) {
+                const roomsList = document.getElementById('admin-rooms-list');
+                if (roomsList) {
+                    roomsList.innerHTML = '<p class="error-message">Failed to load rooms. Please try again.</p>';
+                }
+            }
         }
     }
 
     async loadRecordings() {
         try {
-            this.recordings = await window.auth.apiCall('/api/recordings');
-            this.renderRecordings();
+            console.log('Loading recordings...');
+            const recordings = await window.auth.apiCall('/api/recordings');
+            console.log('Recordings loaded:', recordings.length);
+            
+            // Only update if we got valid data
+            if (Array.isArray(recordings)) {
+                this.recordings = recordings;
+                this.renderRecordings();
+            } else {
+                throw new Error('Invalid recordings data received');
+            }
         } catch (error) {
             console.error('Failed to load recordings:', error);
             this.showError('Failed to load recordings');
+            
+            // Don't clear existing data on error
+            if (this.recordings.length === 0) {
+                const recordingsList = document.getElementById('admin-recordings-list');
+                if (recordingsList) {
+                    recordingsList.innerHTML = '<p class="error-message">Failed to load recordings. Please try again.</p>';
+                }
+            }
+        }
+    }
+
+    async manualRefresh() {
+        try {
+            this.showInfo('Refreshing data...');
+            await this.loadInitialData();
+            this.showSuccess('Data refreshed successfully');
+        } catch (error) {
+            console.error('Manual refresh failed:', error);
+            this.showError('Failed to refresh data');
+        }
+    }
+
+    async checkConnection() {
+        try {
+            await window.auth.apiCall('/api/health');
+            return true;
+        } catch (error) {
+            console.error('Connection check failed:', error);
+            return false;
         }
     }
 
@@ -159,9 +300,23 @@ class AdminApp {
     }
 
     startStatsUpdates() {
-        // Update stats every 30 seconds
-        this.statsUpdateInterval = setInterval(() => {
-            this.updateDashboardStats();
+        // Clear any existing interval
+        if (this.statsUpdateInterval) {
+            clearInterval(this.statsUpdateInterval);
+        }
+        
+        // Update stats every 30 seconds, but check connection first
+        this.statsUpdateInterval = setInterval(async () => {
+            try {
+                const isConnected = await this.checkConnection();
+                if (isConnected) {
+                    await this.updateDashboardStats();
+                } else {
+                    console.log('Connection lost, skipping stats update');
+                }
+            } catch (error) {
+                console.error('Stats update failed:', error);
+            }
         }, 30000);
     }
 
@@ -697,7 +852,25 @@ class AdminApp {
 
     // Public methods for external access
     async refreshAllData() {
-        await this.loadInitialData();
+        try {
+            // Don't clear existing data, just reload
+            console.log('Refreshing all data...');
+            
+            // Load data without clearing existing data first
+            const promises = [
+                this.loadUsers(),
+                this.loadRooms(), 
+                this.loadRecordings()
+            ];
+            
+            await Promise.allSettled(promises);
+            await this.updateDashboardStats();
+            
+            console.log('Data refresh complete');
+        } catch (error) {
+            console.error('Failed to refresh data:', error);
+            this.showError('Failed to refresh some data');
+        }
     }
 
     getUsers() {
