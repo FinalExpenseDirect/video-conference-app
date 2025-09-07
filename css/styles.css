@@ -305,15 +305,17 @@ body {
     border: 2px solid rgba(255, 255, 255, 0.3);
     color: var(--white);
     padding: 0.75rem;
-    border-radius: 50%;
+    border-radius: 8px; /* Changed from 50% to make rectangular */
     cursor: pointer;
     transition: all 0.3s ease;
-    width: 50px;
+    min-width: 60px;
     height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 .control-btn:hover {
@@ -330,6 +332,22 @@ body {
 .control-btn.muted {
     background: var(--action-red);
     border-color: var(--action-red);
+}
+
+/* Specific button states */
+.control-btn[title*="Microphone"].muted .mic-icon::after {
+    content: " OFF";
+    font-size: 0.7rem;
+}
+
+.control-btn[title*="Camera"].muted .video-icon::after {
+    content: " OFF";
+    font-size: 0.7rem;
+}
+
+.control-btn[title*="Share"].active .share-icon::after {
+    content: "ING";
+    font-size: 0.7rem;
 }
 
 .leave-btn,
@@ -1098,19 +1116,72 @@ body {
     gap: 0.5rem;
 }
 
-/* Recording Notice */
+/* Updated Recording Notice - make it dismissible and less intrusive */
 .recording-notice {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 20px; /* Changed from 0 to 20px to float above content */
+    left: 20px;
+    right: 20px;
     background: var(--warning-yellow);
     color: var(--near-black);
-    padding: 0.75rem;
+    padding: 0.75rem 1rem;
     text-align: center;
     font-weight: 500;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 100;
+    border-radius: 8px; /* Add rounded corners */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.notice-dismiss {
+    background: none;
+    border: none;
+    color: var(--near-black);
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+    position: absolute;
+    right: 10px;
+}
+
+.notice-dismiss:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure content doesn't get hidden behind the floating notice */
+.main-layout {
+    padding-bottom: 120px; /* Add padding to account for floating notice */
+}
+
+/* Fix background selector positioning */
+.background-selector {
+    background: var(--white);
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem; /* Add margin to prevent overlap */
+}
+
+/* Ensure sidebar content is not hidden */
+.sidebar {
+    width: 350px;
+    background: var(--white);
+    border-left: 1px solid var(--border-gray);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: 100px; /* Add padding to prevent overlap */
 }
 
 /* Error Messages */
@@ -1248,6 +1319,44 @@ body {
     
     .remote-videos-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Better mobile responsiveness for controls */
+@media (max-width: 768px) {
+    .recording-notice {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+    
+    .control-btn {
+        min-width: 50px;
+        height: 45px;
+        font-size: 0.7rem;
+        padding: 0.5rem;
+    }
+    
+    .main-layout {
+        padding-bottom: 100px;
+    }
+}
+
+/* Hide recording notice on very small screens if needed */
+@media (max-width: 480px) {
+    .recording-notice {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        right: auto;
+        margin: 10px;
+        font-size: 0.8rem;
+    }
+    
+    .main-layout {
+        padding-bottom: 20px;
     }
 }
 

@@ -55,17 +55,17 @@
                         <div id="member-local-video-container" class="local-video-container">
                             <video id="member-local-video" autoplay muted playsinline></video>
                             <div class="video-controls">
-                                <button id="member-toggle-mic" class="control-btn">
-                                    <span class="mic-icon">ðŸŽ¤</span>
+                                <button id="member-toggle-mic" class="control-btn" title="Toggle Microphone">
+                                    <span class="mic-icon">MIC</span>
                                 </button>
-                                <button id="member-toggle-video" class="control-btn">
-                                    <span class="video-icon">ðŸ"¹</span>
+                                <button id="member-toggle-video" class="control-btn" title="Toggle Camera">
+                                    <span class="video-icon">CAM</span>
                                 </button>
-                                <button id="member-share-screen" class="control-btn">
-                                    <span class="share-icon">ðŸ"º</span>
+                                <button id="member-share-screen" class="control-btn" title="Share Screen">
+                                    <span class="share-icon">SHARE</span>
                                 </button>
-                                <button id="member-toggle-fullscreen" class="control-btn">
-                                    <span class="fullscreen-icon">â›¶</span>
+                                <button id="member-toggle-fullscreen" class="control-btn" title="Fullscreen">
+                                    <span class="fullscreen-icon">FULL</span>
                                 </button>
                                 <button id="member-leave-room" class="control-btn leave-btn">
                                     Leave Room
@@ -138,20 +138,20 @@
                             <div id="host-local-video-container" class="local-video-container">
                                 <video id="host-local-video" autoplay muted playsinline></video>
                                 <div class="video-controls">
-                                    <button id="host-toggle-mic" class="control-btn">
-                                        <span class="mic-icon">ðŸŽ¤</span>
+                                    <button id="host-toggle-mic" class="control-btn" title="Toggle Microphone">
+                                        <span class="mic-icon">MIC</span>
                                     </button>
-                                    <button id="host-toggle-video" class="control-btn">
-                                        <span class="video-icon">ðŸ"¹</span>
+                                    <button id="host-toggle-video" class="control-btn" title="Toggle Camera">
+                                        <span class="video-icon">CAM</span>
                                     </button>
-                                    <button id="host-share-screen" class="control-btn">
-                                        <span class="share-icon">ðŸ"º</span>
+                                    <button id="host-share-screen" class="control-btn" title="Share Screen">
+                                        <span class="share-icon">SHARE</span>
                                     </button>
-                                    <button id="host-toggle-fullscreen" class="control-btn">
-                                        <span class="fullscreen-icon">â›¶</span>
+                                    <button id="host-toggle-fullscreen" class="control-btn" title="Fullscreen">
+                                        <span class="fullscreen-icon">FULL</span>
                                     </button>
                                     <button id="host-start-recording" class="control-btn record-btn">
-                                        Start Recording
+                                        REC
                                     </button>
                                     <button id="host-leave-room" class="control-btn leave-btn">
                                         Leave Room
@@ -216,8 +216,9 @@
                 </div>
             </div>
 
-            <div class="recording-notice">
-                âš ï¸ This meeting is being recorded for quality and training purposes.
+            <div class="recording-notice" id="recording-notice">
+                <span>⚠️ This meeting is being recorded for quality and training purposes.</span>
+                <button class="notice-dismiss" onclick="document.getElementById('recording-notice').style.display='none'">×</button>
             </div>
         </div>
 
